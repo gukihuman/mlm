@@ -1,0 +1,36 @@
+{
+    "folder-path-color.folders": [
+        {
+            "path": "smth",
+            "color": "blue"
+        },
+        {
+            "path": "scrolls",
+            "color": "magenta"
+        },
+        {
+            "path": "src/motion",
+            "color": "red"
+        },
+        {
+            "path": "code",
+            "color": "cyan"
+        },
+        {
+            "path": "smth",
+            "color": "green"
+        },
+        {
+            "path": "stones",
+            "color": "yellow"
+        }
+    ],
+    "files.exclude": {
+        ".cargo": true,
+        ".vscode": true,
+        "Cargo.lock": true,
+        "rust-toolchain.toml": true,
+        "target": true
+    },
+    "workspace.isHidden": true
+}
