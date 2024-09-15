@@ -1,5 +1,4 @@
 use crate::*;
-// use bevy::input::mouse::MouseWheel;
 use bevy::{
     render::{
         camera::RenderTarget,
@@ -13,27 +12,24 @@ use bevy::{
     window::WindowResized,
 };
 
-const TEST_COLOR: Color = Color::srgb(0.7, 0.3, 0.5);
-
-const RES_SCALE: u32 = 24;
-const RES_WIDTH: u32 = 16 * RES_SCALE;
-const RES_HEIGHT: u32 = 9 * RES_SCALE;
-
-const ZOOM: f32 = 1.0;
-// const ZOOM_MIN: f32 = 0.5;
-// const ZOOM_MAX: f32 = 2.0;
-// const ZOOM_SPEED: f32 = 1.0;
-
 pub const PIXEL_PERFECT_LAYERS: RenderLayers = RenderLayers::layer(0);
 pub const HIGH_RES_LAYERS: RenderLayers = RenderLayers::layer(1);
+
+const INITIAL_PIXEL_SIZE: i32 = 3;
+
+const TEST_COLOR: Color = Color::srgb(0.7, 0.3, 0.5);
 
 #[derive(Resource)]
 pub struct CameraResource {
     pub in_game_camera: Entity,
     pub outer_camera: Entity,
     pub canvas: Entity,
-    pub zoom: f32,
+    pub canvas_image: Handle<Image>,
+    // pub zoom: f32,
+    pub pixel_size: i32,
     pub followed_entity: Option<Entity>,
+    pub pixel_width: u32,
+    pub pixel_height: u32,
 }
 
 #[derive(Component)]
@@ -51,11 +47,7 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_cameras).add_systems(
             Update,
-            (
-                // zoom,
-                follow.after(motion::update_position),
-                fit_canvas,
-            ),
+            (follow.after(motion::update_position), fit_canvas),
         );
     }
 }
@@ -65,10 +57,21 @@ pub fn setup_cameras(
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    windows: Query<&mut Window>,
 ) {
+    let window_width = windows.single().resolution.width();
+    let window_height = windows.single().resolution.height();
+    // let (window_width, window_height) = (window.width(), window.height());
+
+    let pixel_width = (window_width / INITIAL_PIXEL_SIZE as f32).floor() as u32;
+    let pixel_height =
+        (window_height / INITIAL_PIXEL_SIZE as f32).floor() as u32;
+    // let pixel_width = (window_width / PIXEL_SIZE).floor() as u32;
+    // let pixel_height = (window_height / PIXEL_SIZE).floor() as u32;
+
     let canvas_size = Extent3d {
-        width: RES_WIDTH,
-        height: RES_HEIGHT,
+        width: pixel_width,
+        height: pixel_height,
         ..default()
     };
 
@@ -110,7 +113,7 @@ pub fn setup_cameras(
     let canvas_entity = commands
         .spawn((
             SpriteBundle {
-                texture: image_handle,
+                texture: image_handle.clone(),
                 ..default()
             },
             Canvas,
@@ -139,28 +142,14 @@ pub fn setup_cameras(
         in_game_camera,
         outer_camera,
         canvas: canvas_entity,
-        zoom: ZOOM,
+        canvas_image: image_handle.clone(),
+        // zoom: ZOOM,
+        pixel_size: INITIAL_PIXEL_SIZE,
         followed_entity: None,
+        pixel_width,
+        pixel_height,
     });
 }
-
-// fn zoom(
-//     mut camera_resource: ResMut<CameraResource>,
-//     mut transforms: Query<&mut Transform>,
-//     mut mouse_wheel_events: EventReader<MouseWheel>,
-//     time: Res<Time>,
-// ) {
-//     let adjusted_zoom_speed = ZOOM_SPEED * time.delta_seconds();
-//     for event in mouse_wheel_events.read() {
-//         camera_resource.zoom *= 1.0 - event.y * 2.0 * adjusted_zoom_speed;
-//     }
-//     camera_resource.zoom = camera_resource.zoom.clamp(ZOOM_MIN, ZOOM_MAX);
-//     if let Ok(mut transform) =
-//         transforms.get_mut(camera_resource.in_game_camera)
-//     {
-//         transform.scale = Vec3::splat(camera_resource.zoom);
-//     }
-// }
 
 fn follow(
     camera: ResMut<CameraResource>,
@@ -185,13 +174,49 @@ fn follow(
 fn fit_canvas(
     mut resize_events: EventReader<WindowResized>,
     mut transforms: Query<&mut Transform, With<Canvas>>,
+    mut images: ResMut<Assets<Image>>,
+    mut camera_resource: ResMut<CameraResource>,
+    mut in_game_camera_query: Query<
+        &mut OrthographicProjection,
+        With<InGameCamera>,
+    >,
 ) {
     for event in resize_events.read() {
-        let h_scale = event.width / RES_WIDTH as f32;
-        let v_scale = event.height / RES_HEIGHT as f32;
-        let scale = h_scale.min(v_scale).floor();
+        let new_pixel_width =
+            (event.width / camera_resource.pixel_size as f32).floor() as u32;
+        let new_pixel_height =
+            (event.height / camera_resource.pixel_size as f32).floor() as u32;
+
+        // Update the canvas size
+        if let Some(canvas_image) =
+            images.get_mut(&camera_resource.canvas_image)
+        {
+            canvas_image.resize(Extent3d {
+                width: new_pixel_width,
+                height: new_pixel_height,
+                ..default()
+            });
+        }
+
+        // Update the camera resource
+        camera_resource.pixel_width = new_pixel_width;
+        camera_resource.pixel_height = new_pixel_height;
+
+        // Adjust the canvas transform to fill the window
         if let Ok(mut transform) = transforms.get_single_mut() {
-            transform.scale = Vec3::splat(scale);
+            transform.scale = Vec3::new(
+                camera_resource.pixel_size as f32,
+                camera_resource.pixel_size as f32,
+                1.0,
+            );
+        }
+
+        // Adjust the in-game camera's orthographic projection
+        if let Ok(mut projection) = in_game_camera_query.get_single_mut() {
+            projection.area = Rect::from_center_size(
+                Vec2::ZERO,
+                Vec2::new(new_pixel_width as f32, new_pixel_height as f32),
+            );
         }
     }
 }
