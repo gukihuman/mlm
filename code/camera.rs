@@ -12,24 +12,24 @@ use bevy::{
     window::WindowResized,
 };
 
-pub const PIXEL_PERFECT_LAYERS: RenderLayers = RenderLayers::layer(0);
+pub const PIXEL_LAYER: RenderLayers = RenderLayers::layer(0);
 pub const HIGH_RES_LAYERS: RenderLayers = RenderLayers::layer(1);
 
-const INITIAL_PIXEL_SIZE: i32 = 3;
+const PIXEL_SIZE: f32 = 2.5;
 
 const TEST_COLOR: Color = Color::srgb(0.7, 0.3, 0.5);
 
 #[derive(Resource)]
 pub struct CameraResource {
-    pub in_game_camera: Entity,
+    pub pixel_camera: Entity,
     pub outer_camera: Entity,
     pub canvas: Entity,
     pub canvas_image: Handle<Image>,
     // pub zoom: f32,
-    pub pixel_size: i32,
+    pub pixel_size: f32,
     pub followed_entity: Option<Entity>,
-    pub pixel_width: u32,
-    pub pixel_height: u32,
+    pub pixel_w: u32,
+    pub pixel_h: u32,
 }
 
 #[derive(Component)]
@@ -59,19 +59,15 @@ pub fn setup_cameras(
     mut materials: ResMut<Assets<ColorMaterial>>,
     windows: Query<&mut Window>,
 ) {
-    let window_width = windows.single().resolution.width();
-    let window_height = windows.single().resolution.height();
-    // let (window_width, window_height) = (window.width(), window.height());
+    let window_w = windows.single().resolution.width();
+    let window_h = windows.single().resolution.height();
 
-    let pixel_width = (window_width / INITIAL_PIXEL_SIZE as f32).floor() as u32;
-    let pixel_height =
-        (window_height / INITIAL_PIXEL_SIZE as f32).floor() as u32;
-    // let pixel_width = (window_width / PIXEL_SIZE).floor() as u32;
-    // let pixel_height = (window_height / PIXEL_SIZE).floor() as u32;
+    let pixel_w = (window_w / PIXEL_SIZE).floor() as u32;
+    let pixel_h = (window_h / PIXEL_SIZE).floor() as u32;
 
     let canvas_size = Extent3d {
-        width: pixel_width,
-        height: pixel_height,
+        width: pixel_w,
+        height: pixel_h,
         ..default()
     };
 
@@ -95,7 +91,7 @@ pub fn setup_cameras(
 
     let image_handle = images.add(canvas);
 
-    let in_game_camera = commands
+    let pixel_camera = commands
         .spawn((
             Camera2dBundle {
                 camera: Camera {
@@ -106,7 +102,7 @@ pub fn setup_cameras(
                 ..default()
             },
             InGameCamera,
-            PIXEL_PERFECT_LAYERS,
+            PIXEL_LAYER,
         ))
         .id();
 
@@ -139,15 +135,15 @@ pub fn setup_cameras(
     ));
 
     commands.insert_resource(CameraResource {
-        in_game_camera,
+        pixel_camera,
         outer_camera,
         canvas: canvas_entity,
         canvas_image: image_handle.clone(),
         // zoom: ZOOM,
-        pixel_size: INITIAL_PIXEL_SIZE,
+        pixel_size: PIXEL_SIZE,
         followed_entity: None,
-        pixel_width,
-        pixel_height,
+        pixel_w,
+        pixel_h,
     });
 }
 
@@ -163,7 +159,7 @@ fn follow(
     }
     if let Some(transform) = followed_transform {
         if let Ok(mut camera_transform) =
-            transforms.get_mut(camera.in_game_camera)
+            transforms.get_mut(camera.pixel_camera)
         {
             camera_transform.translation.x = transform.translation.x;
             camera_transform.translation.y = transform.translation.y;
@@ -199,8 +195,8 @@ fn fit_canvas(
         }
 
         // Update the camera resource
-        camera_resource.pixel_width = new_pixel_width;
-        camera_resource.pixel_height = new_pixel_height;
+        camera_resource.pixel_w = new_pixel_width;
+        camera_resource.pixel_h = new_pixel_height;
 
         // Adjust the canvas transform to fill the window
         if let Ok(mut transform) = transforms.get_single_mut() {

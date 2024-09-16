@@ -1,29 +1,28 @@
 use crate::*;
 use bevy::sprite::MaterialMesh2dBundle;
 
-// const MIDDLE_POINT_Z_INDEX: f32 = 20.0;
-// const MIDDLE_RADIUS: f32 = 2.;
-// const MIDDLE_COLOR: Color = Color::srgb(1., 0.4, 0.7);
+const GRID_SIZE: u32 = 100;
+const GRID_CELL_SIZE: f32 = 10.;
 
-// const CROSSHAIR_Z_INDEX: f32 = 999.;
-// const CROSSHAIR_RADIUS: f32 = 2.5;
-// const CROSSHAIR_COLOR: Color = Color::srgb(0.7, 0.9, 0.9);
+const ANIMATION_FPS: f32 = 6.0;
 
-const GRID_SIZE: u32 = 100; // Adjust the size of the grid as needed
-const GRID_CELL_SIZE: f32 = 10.; // Adjust the size of each cell
+#[derive(Component)]
+struct AnimationIndices {
+    first: usize,
+    last: usize,
+}
+
+#[derive(Component, Deref, DerefMut)]
+struct AnimationTimer(Timer);
 
 pub struct DevPlugin;
 impl Plugin for DevPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Startup,
-            (
-                spawn_lira.after(camera::setup_cameras),
-                // spawn_crosshair.after(camera::setup_cameras),
-                // spawn_middle_point,
-                spawn_grid,
-            ),
-        );
+            (spawn_lira.after(camera::setup_cameras), spawn_grid),
+        )
+        .add_systems(Update, animate_sprite);
     }
 }
 
@@ -55,7 +54,7 @@ pub fn spawn_grid(
                     )),
                     ..default()
                 },
-                camera::PIXEL_PERFECT_LAYERS,
+                camera::PIXEL_LAYER,
             ));
         }
     }
@@ -64,68 +63,58 @@ pub fn spawn_grid(
 fn spawn_lira(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     mut camera_resource: ResMut<camera::CameraResource>,
     mut controlled_entity: ResMut<motion::ControlledEntity>,
 ) {
+    let texture = asset_server.load("lira/idle.png");
+    let layout =
+        TextureAtlasLayout::from_grid(UVec2::new(75, 75), 8, 1, None, None);
+    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+
+    let animation_indices = AnimationIndices { first: 0, last: 7 };
+
     let lira = commands
         .spawn((
             SpriteBundle {
-                texture: asset_server.load("lira_idle.png"),
-                transform: Transform::from_xyz(-40., 20., 2.),
+                texture,
+                transform: Transform::from_xyz(0., 0., 10.),
                 ..default()
             },
+            TextureAtlas {
+                layout: texture_atlas_layout,
+                index: animation_indices.first,
+            },
+            animation_indices,
+            AnimationTimer(Timer::from_seconds(
+                1.0 / ANIMATION_FPS,
+                TimerMode::Repeating,
+            )),
             motion::Movement::default(),
-            camera::PIXEL_PERFECT_LAYERS,
+            camera::PIXEL_LAYER,
         ))
         .id();
+
     camera_resource.followed_entity = Some(lira);
     controlled_entity.0 = Some(lira);
 }
 
-// pub fn spawn_crosshair(
-//     mut commands: Commands,
-//     mut meshes: ResMut<Assets<Mesh>>,
-//     mut materials: ResMut<Assets<ColorMaterial>>,
-//     mut camera_resource: ResMut<camera::CameraResource>,
-//     mut controlled_entity: ResMut<motion::ControlledEntity>,
-// ) {
-//     let crosshair = commands
-//         .spawn((
-//             MaterialMesh2dBundle {
-//                 mesh: meshes.add(Circle::new(CROSSHAIR_RADIUS)).into(),
-//                 material: materials.add(ColorMaterial::from(CROSSHAIR_COLOR)),
-//                 transform: Transform::from_translation(Vec3::new(
-//                     0.,
-//                     0.,
-//                     CROSSHAIR_Z_INDEX,
-//                 )),
-//                 ..default()
-//             },
-//             motion::Movement::default(),
-//             camera::PIXEL_PERFECT_LAYERS,
-//         ))
-//         .id();
-//     camera_resource.followed_entity = Some(crosshair);
-//     controlled_entity.0 = Some(crosshair);
-// }
-
-// pub fn spawn_middle_point(
-//     mut commands: Commands,
-//     mut meshes: ResMut<Assets<Mesh>>,
-//     mut materials: ResMut<Assets<ColorMaterial>>,
-// ) {
-//     commands.spawn((
-//         MaterialMesh2dBundle {
-//             mesh: meshes.add(Circle::new(MIDDLE_RADIUS)).into(),
-//             material: materials.add(ColorMaterial::from(MIDDLE_COLOR)),
-//             transform: Transform::from_translation(Vec3::new(
-//                 0.,
-//                 0.,
-//                 MIDDLE_POINT_Z_INDEX,
-//             )),
-//             ..default()
-//         },
-//         motion::Movement::default(),
-//         camera::PIXEL_PERFECT_LAYERS,
-//     ));
-// }
+fn animate_sprite(
+    time: Res<Time>,
+    mut query: Query<(
+        &AnimationIndices,
+        &mut AnimationTimer,
+        &mut TextureAtlas,
+    )>,
+) {
+    for (indices, mut timer, mut atlas) in &mut query {
+        timer.tick(time.delta());
+        if timer.just_finished() {
+            atlas.index = if atlas.index == indices.last {
+                indices.first
+            } else {
+                atlas.index + 1
+            };
+        }
+    }
+}

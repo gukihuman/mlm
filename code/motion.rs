@@ -14,7 +14,7 @@ impl Plugin for MotionPlugin {
             (
                 update_destination,
                 update_position.after(update_destination),
-                draw_gizmos.after(update_position), // 📜 run if edit mod or smth
+                draw_gizmos.after(update_position),
             ),
         );
     }
@@ -31,11 +31,11 @@ pub struct Movement {
 impl Default for Movement {
     fn default() -> Self {
         Self {
-            speed: 100.0,
+            speed: 80.0,
             destination: None,
             velocity_desire: Vec2::default(),
             velocity: Vec2::default(),
-            inertia_ratio: 0.1, // velocity -> velocity_desire
+            inertia_ratio: 0.2,
         }
     }
 }
@@ -47,7 +47,6 @@ fn update_destination(
 ) {
     if let Some(entity) = controlled_entity.0 {
         if let Ok((transform, mut movement)) = query.get_mut(entity) {
-            // 📜 only gamepad, add more
             if gamepad_state.left_stick_deadzone_exceed {
                 let change_in_direction = Vec2::new(
                     gamepad_state.left_stick_x,
@@ -98,7 +97,6 @@ fn calculate_velocity_desire(
 
 fn calculate_velocity(movement: &mut Movement, delta_seconds: f32) -> Vec2 {
     let delta_inertia = delta_seconds / movement.inertia_ratio;
-    // 📜 unpack a bit :)
     movement.velocity * (1.0 - delta_inertia)
         + movement.velocity_desire * delta_inertia
 }

@@ -30,7 +30,8 @@
         ".vscode": true,
         "Cargo.lock": true,
         "rust-toolchain.toml": true,
-        "target": true
+        "target": true,
+        "forge": true
     },
     "workspace.isHidden": true
 }
