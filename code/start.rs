@@ -5,6 +5,7 @@ pub mod camera;
 pub mod dev;
 pub mod gamepad;
 pub mod motion;
+pub mod tilemap;
 pub mod time;
 
 fn main() {
@@ -33,6 +34,7 @@ fn main() {
         gamepad::GamepadPlugin,
         motion::MotionPlugin,
         dev::DevPlugin,
+        tilemap::TilemapPlugin,
     ));
 
     app.run();

@@ -50,7 +50,7 @@ pub fn spawn_grid(
                             - (GRID_SIZE as f32 * GRID_CELL_SIZE) / 2.,
                         y as f32 * GRID_CELL_SIZE
                             - (GRID_SIZE as f32 * GRID_CELL_SIZE) / 2.,
-                        0., // Z-index can be adjusted as needed
+                        0.,
                     )),
                     ..default()
                 },
@@ -78,7 +78,7 @@ fn spawn_lira(
         .spawn((
             SpriteBundle {
                 texture,
-                transform: Transform::from_xyz(0., 0., 10.),
+                transform: Transform::from_xyz(0., 0., 100.),
                 ..default()
             },
             TextureAtlas {

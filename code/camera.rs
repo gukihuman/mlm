@@ -127,7 +127,7 @@ pub fn setup_cameras(
             mesh: meshes.add(Circle::new(10.0)).into(),
             material: materials.add(ColorMaterial::from(TEST_COLOR)),
             transform: Transform::from_translation(Vec3::new(
-                100.0, 100.0, 0.0,
+                100.0, 100.0, 300.0,
             )),
             ..default()
         },
