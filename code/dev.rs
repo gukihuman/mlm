@@ -1,8 +1,10 @@
 use crate::*;
-use bevy::sprite::MaterialMesh2dBundle;
-
-const GRID_SIZE: u32 = 100;
-const GRID_CELL_SIZE: f32 = 10.;
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+use iyes_perf_ui::entries::diagnostics::{
+    PerfUiEntryFPS, PerfUiEntryFrameTime,
+};
+use iyes_perf_ui::ui::root::PerfUiRoot;
+use iyes_perf_ui::PerfUiPlugin;
 
 const ANIMATION_FPS: f32 = 6.0;
 
@@ -18,46 +20,21 @@ struct AnimationTimer(Timer);
 pub struct DevPlugin;
 impl Plugin for DevPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Startup,
-            (spawn_lira.after(camera::setup_cameras), spawn_grid),
-        )
-        .add_systems(Update, animate_sprite);
+        app.add_plugins((FrameTimeDiagnosticsPlugin, PerfUiPlugin::default()))
+            .add_systems(
+                Startup,
+                (spawn_lira.after(camera::setup_cameras), set_diagnostics),
+            )
+            .add_systems(Update, animate_sprite);
     }
 }
 
-pub fn spawn_grid(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    for x in 0..GRID_SIZE {
-        for y in 0..GRID_SIZE {
-            let color = if (x + y) % 2 == 0 {
-                Color::srgb(0.5, 0.5, 0.5)
-            } else {
-                Color::srgb(0.4, 0.4, 0.4)
-            };
-
-            commands.spawn((
-                MaterialMesh2dBundle {
-                    mesh: meshes
-                        .add(Rectangle::from_size(Vec2::splat(GRID_CELL_SIZE)))
-                        .into(),
-                    material: materials.add(ColorMaterial::from(color)),
-                    transform: Transform::from_translation(Vec3::new(
-                        x as f32 * GRID_CELL_SIZE
-                            - (GRID_SIZE as f32 * GRID_CELL_SIZE) / 2.,
-                        y as f32 * GRID_CELL_SIZE
-                            - (GRID_SIZE as f32 * GRID_CELL_SIZE) / 2.,
-                        0.,
-                    )),
-                    ..default()
-                },
-                camera::PIXEL_LAYER,
-            ));
-        }
-    }
+fn set_diagnostics(mut commands: Commands) {
+    commands.spawn((
+        PerfUiRoot::default(),
+        PerfUiEntryFPS::default(),
+        PerfUiEntryFrameTime::default(),
+    ));
 }
 
 fn spawn_lira(

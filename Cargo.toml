@@ -35,4 +35,5 @@ bevy = { version = "0.14.2", features = ["dynamic_linking"] } # cargo run
 image = "0.24.6" # to forge spritesheets
 walkdir = "2.3.3" # at least to forge spritesheets
 rand = "0.8.5" # at least tile map generation
+iyes_perf_ui = "0.3.0" # diagnostics
 

@@ -120,7 +120,6 @@ pub fn setup_cameras(
     let outer_camera = commands
         .spawn((Camera2dBundle::default(), OuterCamera, HIGH_RES_LAYERS))
         .id();
-
     // Spawn a circle for the outer camera (high-res layer)
     commands.spawn((
         MaterialMesh2dBundle {
