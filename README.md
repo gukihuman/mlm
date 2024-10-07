@@ -1,4 +1,4 @@
-# Spirit of Lira
+# Mommy's Little Monsters
 
 _version 0.1.0_
 
@@ -8,8 +8,8 @@ A 2D action RPG built using the Bevy engine
 
 ## Links
 
--   Documentation: https://gukihuman.github.io/sol-doc/
--   Documentation repository: https://github.com/gukihuman/sol-doc/
+-   Documentation: https://gukihuman.github.io/mlm-doc/
+-   Documentation repository: https://github.com/gukihuman/mlm-doc/
 
 ## Setup
 
@@ -18,9 +18,9 @@ A 2D action RPG built using the Bevy engine
 2. Clone the repository and navigate into it
 
     ```bash
-    git clone https://github.com/gukisan/sol.git
+    git clone https://github.com/gukisan/mlm.git
 
-    cd sol
+    cd mlm
     ```
 
 3. Run in dev mode _(takes a bit for the first time)_
