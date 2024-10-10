@@ -19,18 +19,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let output_dir = assets_dir.join(relative_path);
             fs::create_dir_all(&output_dir)?;
 
-            let mut spritesheets: HashMap<
-                String,
-                Vec<(PathBuf, image::DynamicImage)>,
-            > = HashMap::new();
+            let mut spritesheets: HashMap<String, Vec<(PathBuf, image::DynamicImage)>> =
+                HashMap::new();
 
             for file in WalkDir::new(entry.path())
                 .into_iter()
                 .filter_map(|e| e.ok())
             {
                 if file.path().extension().map_or(false, |ext| ext == "png") {
-                    let file_stem =
-                        file.path().file_stem().unwrap().to_str().unwrap();
+                    let file_stem = file.path().file_stem().unwrap().to_str().unwrap();
                     let parts: Vec<&str> = file_stem.split('_').collect();
                     if parts.len() >= 2 {
                         let sprite_name = parts[0].to_string();
@@ -50,16 +47,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let mut spritesheet = ImageBuffer::new(total_width, height);
 
                 for (i, (_, img)) in images.iter().enumerate() {
-                    image::imageops::replace(
-                        &mut spritesheet,
-                        img,
-                        (i as u32 * width) as i64,
-                        0,
-                    );
+                    image::imageops::replace(&mut spritesheet, img, (i as u32 * width) as i64, 0);
                 }
 
-                let output_path =
-                    output_dir.join(format!("{}.png", sprite_name));
+                let output_path = output_dir.join(format!("{}.png", sprite_name));
                 spritesheet.save(&output_path)?;
                 println!("Generated spritesheet: {}", output_path.display());
             }

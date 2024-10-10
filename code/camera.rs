@@ -3,8 +3,7 @@ use bevy::{
     render::{
         camera::RenderTarget,
         render_resource::{
-            Extent3d, TextureDescriptor, TextureDimension, TextureFormat,
-            TextureUsages,
+            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
         },
         view::RenderLayers,
     },
@@ -33,7 +32,7 @@ pub struct CameraResource {
 }
 
 #[derive(Component)]
-struct InGameCamera;
+pub struct InGameCamera;
 
 #[derive(Component)]
 struct OuterCamera;
@@ -47,7 +46,7 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_cameras).add_systems(
             Update,
-            (follow.after(motion::update_position), fit_canvas),
+            (follow.after(movement::update_position), fit_canvas),
         );
     }
 }
@@ -125,9 +124,7 @@ pub fn setup_cameras(
         MaterialMesh2dBundle {
             mesh: meshes.add(Circle::new(10.0)).into(),
             material: materials.add(ColorMaterial::from(TEST_COLOR)),
-            transform: Transform::from_translation(Vec3::new(
-                100.0, 100.0, 300.0,
-            )),
+            transform: Transform::from_translation(Vec3::new(100.0, 100.0, 300.0)),
             ..default()
         },
         HIGH_RES_LAYERS,
@@ -146,10 +143,7 @@ pub fn setup_cameras(
     });
 }
 
-fn follow(
-    camera: ResMut<CameraResource>,
-    mut transforms: Query<&mut Transform>,
-) {
+fn follow(camera: ResMut<CameraResource>, mut transforms: Query<&mut Transform>) {
     let mut followed_transform: Option<Transform> = None;
     if let Some(followed_entity) = camera.followed_entity {
         if let Ok(transform) = transforms.get_mut(followed_entity) {
@@ -157,9 +151,7 @@ fn follow(
         }
     }
     if let Some(transform) = followed_transform {
-        if let Ok(mut camera_transform) =
-            transforms.get_mut(camera.pixel_camera)
-        {
+        if let Ok(mut camera_transform) = transforms.get_mut(camera.pixel_camera) {
             camera_transform.translation.x = transform.translation.x;
             camera_transform.translation.y = transform.translation.y;
         }
@@ -171,21 +163,14 @@ fn fit_canvas(
     mut transforms: Query<&mut Transform, With<Canvas>>,
     mut images: ResMut<Assets<Image>>,
     mut camera_resource: ResMut<CameraResource>,
-    mut in_game_camera_query: Query<
-        &mut OrthographicProjection,
-        With<InGameCamera>,
-    >,
+    mut in_game_camera_query: Query<&mut OrthographicProjection, With<InGameCamera>>,
 ) {
     for event in resize_events.read() {
-        let new_pixel_width =
-            (event.width / camera_resource.pixel_size as f32).floor() as u32;
-        let new_pixel_height =
-            (event.height / camera_resource.pixel_size as f32).floor() as u32;
+        let new_pixel_width = (event.width / camera_resource.pixel_size as f32).floor() as u32;
+        let new_pixel_height = (event.height / camera_resource.pixel_size as f32).floor() as u32;
 
         // Update the canvas size
-        if let Some(canvas_image) =
-            images.get_mut(&camera_resource.canvas_image)
-        {
+        if let Some(canvas_image) = images.get_mut(&camera_resource.canvas_image) {
             canvas_image.resize(Extent3d {
                 width: new_pixel_width,
                 height: new_pixel_height,

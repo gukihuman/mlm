@@ -1,0 +1,4 @@
+[window]
+# Windowed, BorderlessFullscreen, Fullscreen
+mode = "BorderlessFullscreen"
+vsync = false

@@ -1,29 +1,24 @@
 use bevy::prelude::*;
-use bevy::window::*;
 
 pub mod camera;
 pub mod dev;
 pub mod gamepad;
-pub mod motion;
+pub mod movement;
+pub mod settings;
 pub mod tilemap;
 pub mod time;
 
 fn main() {
     let mut app = App::new();
 
+    app.add_plugins(settings::SettingsPlugin);
+
+    let settings = app.world().resource::<settings::GameSettings>();
+    let window_plugin = settings::apply_window_settings(settings.clone());
+
     app.add_plugins(
         DefaultPlugins
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    mode: WindowMode::BorderlessFullscreen,
-                    present_mode: PresentMode::AutoNoVsync,
-                    title: "Spirit of Lira".into(),
-                    resizable: true,
-                    window_theme: Some(WindowTheme::Dark),
-                    ..default()
-                }),
-                ..default()
-            })
+            .set(window_plugin)
             .set(ImagePlugin::default_nearest())
             .build(),
     )
@@ -32,7 +27,7 @@ fn main() {
     .add_plugins((
         camera::CameraPlugin,
         gamepad::GamepadPlugin,
-        motion::MotionPlugin,
+        movement::MovementPlugin,
         dev::DevPlugin,
         tilemap::TilemapPlugin,
     ));

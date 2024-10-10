@@ -47,23 +47,6 @@ cargo build --release
 -   Rust: [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
 -   Bevy: [https://bevyengine.org/](https://bevyengine.org/)
 
-## Code Formatting
-
-1. Add a `rustfmt.toml` file to the root directory and set the maximum line width there
-
-    ```toml
-    max_width = 80
-    ```
-
-2. Use `rust-lang.rust-analyzer` as the default formatter, here an example of VS Code settings
-
-    ```json
-    "[rust]": {
-        "editor.tabSize": 4,
-        "editor.defaultFormatter": "rust-lang.rust-analyzer",
-    }
-    ```
-
 ## Contributing
 
 Contributions are welcome! Feel free to open issues or pull requests.

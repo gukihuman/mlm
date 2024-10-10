@@ -1,8 +1,6 @@
 use crate::*;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
-use iyes_perf_ui::entries::diagnostics::{
-    PerfUiEntryFPS, PerfUiEntryFrameTime,
-};
+use iyes_perf_ui::entries::diagnostics::{PerfUiEntryFPS, PerfUiEntryFrameTime};
 use iyes_perf_ui::ui::root::PerfUiRoot;
 use iyes_perf_ui::PerfUiPlugin;
 
@@ -42,11 +40,10 @@ fn spawn_lira(
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     mut camera_resource: ResMut<camera::CameraResource>,
-    mut controlled_entity: ResMut<motion::ControlledEntity>,
+    mut controlled_entity: ResMut<movement::ControlledEntity>,
 ) {
     let texture = asset_server.load("lira/idle.png");
-    let layout =
-        TextureAtlasLayout::from_grid(UVec2::new(75, 75), 8, 1, None, None);
+    let layout = TextureAtlasLayout::from_grid(UVec2::new(75, 127), 8, 1, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     let animation_indices = AnimationIndices { first: 0, last: 7 };
@@ -67,7 +64,7 @@ fn spawn_lira(
                 1.0 / ANIMATION_FPS,
                 TimerMode::Repeating,
             )),
-            motion::Movement::default(),
+            movement::Movement::default(),
             camera::PIXEL_LAYER,
         ))
         .id();
@@ -78,11 +75,7 @@ fn spawn_lira(
 
 fn animate_sprite(
     time: Res<Time>,
-    mut query: Query<(
-        &AnimationIndices,
-        &mut AnimationTimer,
-        &mut TextureAtlas,
-    )>,
+    mut query: Query<(&AnimationIndices, &mut AnimationTimer, &mut TextureAtlas)>,
 ) {
     for (indices, mut timer, mut atlas) in &mut query {
         timer.tick(time.delta());
