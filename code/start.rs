@@ -5,7 +5,10 @@ pub mod dev;
 pub mod gamepad;
 pub mod movement;
 pub mod settings;
-pub mod tilemap;
+pub mod tiles {
+    pub mod tile_generation;
+    pub mod tilemap;
+}
 pub mod time;
 
 fn main() {
@@ -29,7 +32,7 @@ fn main() {
         gamepad::GamepadPlugin,
         movement::MovementPlugin,
         dev::DevPlugin,
-        tilemap::TilemapPlugin,
+        tiles::tilemap::TilemapPlugin,
     ));
     app.run();
 }

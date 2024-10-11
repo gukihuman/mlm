@@ -36,6 +36,7 @@ image = "0.24.6" # to forge spritesheets
 walkdir = "2.3.3" # at least to forge spritesheets
 rand = "0.8.5" # at least tile map generation
 iyes_perf_ui = "0.3.0" # diagnostics
-toml = "0.8.19"
-serde = { version = "1.0", features = ["derive"] }
+toml = "0.8.19" # settings
+serde = { version = "1.0", features = ["derive"] } # settings
+noise = "0.9.0" # tile generation
 

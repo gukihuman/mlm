@@ -119,16 +119,6 @@ pub fn setup_cameras(
     let outer_camera = commands
         .spawn((Camera2dBundle::default(), OuterCamera, HIGH_RES_LAYERS))
         .id();
-    // Spawn a circle for the outer camera (high-res layer)
-    commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes.add(Circle::new(10.0)).into(),
-            material: materials.add(ColorMaterial::from(TEST_COLOR)),
-            transform: Transform::from_translation(Vec3::new(100.0, 100.0, 300.0)),
-            ..default()
-        },
-        HIGH_RES_LAYERS,
-    ));
 
     commands.insert_resource(CameraResource {
         pixel_camera,

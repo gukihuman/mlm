@@ -1,20 +1,18 @@
+use crate::tiles::tile_generation::{generate_tilemap, TileType};
 use crate::*;
 use bevy::ecs::system::ParamSet;
 use bevy::sprite::MaterialMesh2dBundle;
 use camera::HIGH_RES_LAYERS;
-use rand::Rng;
 
 const TILE_SIZE_X: f32 = 16.0;
 const TILE_SIZE_Y: f32 = 8.0;
 const TILE_COUNT_X: u32 = 4;
 const TILE_COUNT_Y: u32 = 2;
-const MAP_WIDTH: u32 = 50;
-const MAP_HEIGHT: u32 = 30;
 const MINIMAP_SCALE: f32 = 0.3;
 const MINIMAP_SCREEN_X: f32 = 0.0;
 const MINIMAP_SCREEN_Y: f32 = 0.0;
-const MINIMAP_SCREEN_PERCENT_X: f32 = 0.00; // 5% from the left edge
-const MINIMAP_SCREEN_PERCENT_Y: f32 = 0.00; // 5% from the top edge
+const MINIMAP_SCREEN_PERCENT_X: f32 = 0.00;
+const MINIMAP_SCREEN_PERCENT_Y: f32 = 0.00;
 
 const CIRCLE_COLOR: Color = Color::srgb(0.3, 0.3, 0.5);
 
@@ -46,35 +44,6 @@ impl Default for MinimapState {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum TileType {
-    Stone,
-    Grass,
-    Water,
-    Dirt,
-}
-
-impl TileType {
-    fn to_index(&self) -> usize {
-        match self {
-            TileType::Stone => 0,
-            TileType::Grass => 1,
-            TileType::Water => 2,
-            TileType::Dirt => 3,
-        }
-    }
-
-    fn random() -> Self {
-        let mut rng = rand::thread_rng();
-        match rng.gen_range(0..4) {
-            0 => TileType::Stone,
-            1 => TileType::Grass,
-            2 => TileType::Water,
-            _ => TileType::Dirt,
-        }
-    }
-}
-
 pub struct TilemapPlugin;
 
 impl Plugin for TilemapPlugin {
@@ -96,9 +65,7 @@ impl Plugin for TilemapPlugin {
 }
 
 fn setup_tilemap(mut tilemap: ResMut<Tilemap>) {
-    tilemap.tiles = (0..MAP_HEIGHT)
-        .map(|_| (0..MAP_WIDTH).map(|_| TileType::random()).collect())
-        .collect();
+    tilemap.tiles = generate_tilemap();
 }
 
 fn spawn_tiles(
